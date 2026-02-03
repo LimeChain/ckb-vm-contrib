@@ -23,7 +23,7 @@ use ckb_std::{
     syscalls::traits::{Bounds, Error, IoResult, SyscallImpls},
 };
 use ckb_vm::SupportMachine;
-use ckb_vm_fuzzing_utils::{CkbvmRunnerImpls, exit_with_panic, flatten_args};
+use ckb_vm_fuzzing_utils::{exit_with_panic, flatten_args, CkbvmRunnerImpls};
 use core::ffi::CStr;
 use core::marker::PhantomData;
 use prost::Message;
@@ -99,6 +99,11 @@ impl ProtobufImpls {
         syscalls.pop_front().and_then(|s| s.value)
     }
 
+    /// Process an I/O syscall from the trace.
+    /// 
+    /// This handles both "probe" calls (buf.len=0, just checking size) and
+    /// "load" calls (buf.len>0, actually loading data). CKB scripts commonly
+    /// use the probe-then-load pattern to discover data sizes before allocating.
     fn io_syscall(&self, buf: &mut [u8], offset: usize, expected_length: Option<usize>) -> IoResult {
         match self.syscall() {
             Some(traces::syscall::Value::ReturnWithCode(code)) => {
@@ -108,33 +113,35 @@ impl ProtobufImpls {
                 e.into()
             }
             Some(traces::syscall::Value::IoData(io_data)) => {
+                // Calculate total available data (loaded + pending)
+                let total_available = io_data.available_data.len() + io_data.additional_length as usize;
+                
                 if let Some(length) = expected_length {
                     if offset > length {
                         return UNEXPECTED_RESULT;
                     }
-                    if io_data.available_data.len() != length - offset {
+                    // Only validate length for full loads (no additional data pending).
+                    // Probe calls have additional_length > 0, so skip validation for those.
+                    if io_data.additional_length == 0 && io_data.available_data.len() != length - offset {
                         return UNEXPECTED_RESULT;
                     }
                 }
-                let result = if buf.len() > io_data.available_data.len() {
-                    if io_data.additional_length > 0 {
-                        return UNEXPECTED_RESULT;
-                    }
-                    IoResult::FullyLoaded(io_data.available_data.len())
-                } else if (buf.len() < io_data.available_data.len()) || (io_data.additional_length > 0) {
+                
+                // Determine how much we can actually load
+                let loaded = core::cmp::min(buf.len(), io_data.available_data.len());
+                let result = if loaded < total_available {
+                    // Partial load - either buffer too small or there's additional data
                     IoResult::PartialLoaded {
-                        loaded: buf.len(),
-                        available: io_data.available_data.len() + io_data.additional_length as usize,
+                        loaded,
+                        available: total_available,
                     }
                 } else {
-                    // buf.len() == io_data.available_data.len() &&
-                    // io_data.additional_length == 0
-                    IoResult::FullyLoaded(buf.len())
+                    // Full load - we got everything
+                    IoResult::FullyLoaded(loaded)
                 };
-                if let Some(read) = result.loaded() {
-                    if read > 0 {
-                        buf[0..read].copy_from_slice(&io_data.available_data[0..read]);
-                    }
+                
+                if loaded > 0 {
+                    buf[0..loaded].copy_from_slice(&io_data.available_data[0..loaded]);
                 }
                 result
             }
