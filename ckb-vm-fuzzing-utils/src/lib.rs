@@ -3,7 +3,7 @@
 #[macro_use]
 extern crate alloc;
 
-use alloc::{ffi::CString, vec::Vec};
+use alloc::{boxed::Box, ffi::CString, vec::Vec};
 use ckb_std::{
     ckb_constants::{Place, Source},
     syscalls::traits::{Bounds, Error, IoResult, SyscallImpls},
