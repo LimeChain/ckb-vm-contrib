@@ -30,7 +30,7 @@ ckb-std = { version = "=1.0.1", default-features = false, features = [
 ] }
 ckb-traits = "1.0.0"
 ckb-types = "1.0.0"
-ckb-vm = { version = "0.24", features = ["pprof"] }
+ckb-vm = { version = "0.24", default-features = false, features = ["pprof"] }
 
 # Crates defined in current workspace
 ckb-mock-tx-types = { path = "ckb-mock-tx-types", version = "1.0.0" }
