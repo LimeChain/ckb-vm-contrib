@@ -433,6 +433,7 @@ pub fn exit_with_panic(code: i8) -> ! {
     panic!("@@@@CKB@@@@FUZING@@@@EXIT@@@@{}@@@@", code);
 }
 
+#[cfg(feature = "std")]
 pub fn parse_panic_for_exit_code(s: &str) -> Option<i8> {
     let re = regex::Regex::new(r"@@@@CKB@@@@FUZING@@@@EXIT@@@@([0-9]+)@@@@").unwrap();
     if let Some(caps) = re.captures(s) {

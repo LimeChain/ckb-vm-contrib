@@ -7,14 +7,16 @@ edition.workspace = true
 authors.workspace = true
 
 [dependencies]
-ckb-vm-fuzzing-utils.workspace = true
+ckb-vm-fuzzing-utils = { workspace = true, default-features = false }
 ckb-vm.workspace = true
 ckb-std.workspace = true
 
-once_cell.workspace = true
 prost.workspace = true
-prost-reflect.workspace = true
 spin.workspace = true
+
+# std-only
+once_cell = { workspace = true, optional = true }
+prost-reflect = { workspace = true, optional = true }
 
 [build-dependencies]
 prost-build.workspace = true
@@ -22,7 +24,7 @@ prost-reflect-build.workspace = true
 
 [features]
 default = ["std", "stub-c-syscalls"]
-std = []
+std = ["once_cell", "prost-reflect", "prost/std", "ckb-vm-fuzzing-utils/std"]
 stub-c-syscalls = ["ckb-std/stub-c-syscalls"]
-text-format = []
+text-format = ["std"]
 print-debug-messages = ["std"]

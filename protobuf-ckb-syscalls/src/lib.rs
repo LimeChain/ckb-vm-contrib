@@ -4,9 +4,12 @@ extern crate alloc;
 
 pub mod generated {
     pub mod traces {
+        #[cfg(feature = "std")]
         use once_cell::sync::Lazy;
+        #[cfg(feature = "std")]
         use prost_reflect::DescriptorPool;
 
+        #[cfg(feature = "std")]
         pub static DESCRIPTOR_POOL: Lazy<DescriptorPool> = Lazy::new(|| {
             DescriptorPool::decode(include_bytes!(concat!(env!("OUT_DIR"), "/file_descriptor_set.bin")).as_ref())
                 .unwrap()

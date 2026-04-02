@@ -10,8 +10,8 @@ authors.workspace = true
 int-enum = "1.2.0"
 ckb-vm.workspace = true
 ckb-std.workspace = true
-regex.workspace = true
+regex = { workspace = true, optional = true }
 
 [features]
 default = ["std"]
-std = ["regex/std"]
+std = ["regex"]

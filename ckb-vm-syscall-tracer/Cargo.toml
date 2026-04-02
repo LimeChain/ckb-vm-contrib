@@ -22,7 +22,7 @@ default = ["asm"]
 asm = ["ckb-script/asm"]
 
 [dependencies]
-ckb-vm-fuzzing-utils.workspace = true
+ckb-vm-fuzzing-utils = { workspace = true, features = ["std"] }
 
 ckb-chain-spec.workspace = true
 ckb-mock-tx-types.workspace = true
@@ -35,7 +35,7 @@ ckb-std.workspace = true
 clap.workspace = true
 hex.workspace = true
 once_cell.workspace = true
-prost.workspace = true
+prost = { workspace = true, features = ["std"] }
 prost-reflect.workspace = true
 serde.workspace = true
 serde_json.workspace = true
